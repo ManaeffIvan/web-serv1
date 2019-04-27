@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+
+{% block content %}
+        <div class="jumbotron">
+          <h1 class="display-4">{{ company[1] }}</h1>
+          <p class="lead">Адрес: {{ company[2] }}</p>
+          <hr class="my-4">
+          <p>Другой информации я о компаниях не придумывал</p>
+        </div>
+        <a href="/company_admin"> <button type="button" class="btn btn-outline-info">Назад</button></a>
+{% endblock %}

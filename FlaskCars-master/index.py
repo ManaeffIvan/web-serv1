@@ -27,8 +27,8 @@ def index():
     if session['username'] == 'admin':
         return render_template('index_admin.html', username=session['username'])
     # если обычный пользователь, то его на свою
-    cars = MagazinesModel(db.get_connection()).get_all()
-    return render_template('magazine_user.html', username=session['username'], title='Просмотр базы', cars=cars)
+    magazines = MagazinesModel(db.get_connection()).get_all()
+    return render_template('magazine_user.html', username=session['username'], title='Просмотр базы', magazines=magazines)
 
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -42,6 +42,7 @@ def login():
     if form.validate_on_submit():  # ввели логин и пароль
         user_name = form.username.data
         password = form.password.data
+
         user_model = UsersModel(db.get_connection())
         # проверяем наличие пользователя в БД и совпадение пароля
         if user_model.exists(user_name)[0] and check_password_hash(user_model.exists(user_name)[1], password):
@@ -87,7 +88,7 @@ def register():
 @app.route('/magazine_admin', methods=['GET'])
 def magazine_admin():
     """
-    Вывод всей информации об всех автомобилях
+    Вывод всей информации об всех журналах
     :return:
     информация для авторизованного пользователя
     """
@@ -99,17 +100,17 @@ def magazine_admin():
         flash('Доступ запрещен')
         redirect('index')
     # если обычный пользователь, то его на свою
-    cars = MagazinesModel(db.get_connection()).get_all()
+    magazines = MagazinesModel(db.get_connection()).get_all()
     return render_template('magazine_admin.html',
                            username=session['username'],
-                           title='Просмотр автомобилей',
-                           cars=cars)
+                           title='Просмотр журналов',
+                           magazines=magazines)
 
 
 @app.route('/add_magazine', methods=['GET', 'POST'])
 def add_magazine():
     """
-    Добавление автомобиля
+    Добавление журнала
     """
     # если пользователь не авторизован, кидаем его на страницу входа
     if 'username' not in session:
@@ -118,26 +119,26 @@ def add_magazine():
     if session['username'] != 'admin':
         return redirect('index')
     form = AddMagazineForm()
-    available_companies = [(i[0], i[1]) for i in MagazinesModel(db.get_connection()).get_all()]
+    available_companies = [(i[0], i[1]) for i in CompaniesModel(db.get_connection()).get_all()]
     form.company_id.choices = available_companies
     if form.validate_on_submit():
-        # создать автомобиль
+        # создать журнал
         magazines = MagazinesModel(db.get_connection())
-        magazines.insert(model=form.name.data,
+        magazines.insert(name=form.name.data,
                     price=form.price.data,
-                    power=form.length.data,
-                    color=form.theme.data,
-                    dealer=form.company_id.data)
+                    length=form.length.data,
+                    theme=form.theme.data,
+                    company=form.company_id.data)
         # редирект на главную страницу
         return redirect(url_for('magazine_admin'))
-    return render_template("add_magazine.html", title='Добавление автомобиля', form=form)
+    return render_template("add_magazine.html", title='Добавление журнала', form=form)
 
 #---------------------------------------------------------------------------------------------------------------------
 
-@app.route('/car/<int:car_id>', methods=['GET'])
-def car(car_id):
+@app.route('/magazine/<int:magazine_id>', methods=['GET'])
+def magazine(magazine_id):
     """
-    Вывод всей информации об автомобиле
+    Вывод всей информации о журнале
     :return:
     информация для авторизованного пользователя
     """
@@ -148,52 +149,52 @@ def car(car_id):
     '''if session['username'] != 'admin':
         return redirect(url_for('index'))'''
     # иначе выдаем информацию
-    car = CarsModel(db.get_connection()).get(car_id)
-    dealer = DealersModel(db.get_connection()).get(car[5])
-    return render_template('car_info.html',
+    magazine = MagazinesModel(db.get_connection()).get(magazine_id)
+    сompany = CompaniesModel(db.get_connection()).get(magazine[5])
+    return render_template('magazine_info.html',
                            username=session['username'],
-                           title='Просмотр автомобиля',
-                           car=car,
-                           dealer=dealer[1])
+                           title='Просмотр журнала',
+                           magazine=magazine,
+                           сompany=сompany[1])
 
 
 @app.route('/search_price', methods=['GET', 'POST'])
 def search_price():
     """
-    Запрос автомобилей, удовлетворяющих определенной цене
+    Запрос журналов, удовлетворяющих определенной цене
     """
     form = SearchPriceForm()
     if form.validate_on_submit():
-        # получить все машины по определенной цене
-        cars = CarsModel(db.get_connection()).get_by_price(form.start_price.data, form.end_price.data)
+        # получить все журналы по определенной цене
+        magazines = MagazinesModel(db.get_connection()).get_by_price(form.start_price.data, form.end_price.data)
         # редирект на страницу с результатами
-        return render_template('car_user.html', username=session['username'], title='Просмотр базы', cars=cars)
+        return render_template('magazine_user.html', username=session['username'], title='Просмотр базы', magazines=magazines)
     return render_template("search_price.html", title='Подбор по цене', form=form)
 
 
-@app.route('/search_dealer', methods=['GET', 'POST'])
-def search_dealer():
+@app.route('/search_company', methods=['GET', 'POST'])
+def search_company():
     """
-    Запрос автомобилей, продающихся в определенном дилерском центре
+    Запрос журналов, продающихся в определенной компании
     """
-    form = SearchDealerForm()
-    available_dealers = [(i[0], i[1]) for i in DealersModel(db.get_connection()).get_all()]
-    form.dealer_id.choices = available_dealers
+    form = SearchCompanyForm()
+    available_companies = [(i[0], i[1]) for i in CompaniesModel(db.get_connection()).get_all()]
+    form.company_id.choices = available_companies
     if form.validate_on_submit():
         #
-        cars = CarsModel(db.get_connection()).get_by_dealer(form.dealer_id.data)
+        magazines = MagazinesModel(db.get_connection()).get_by_company(form.company_id.data)
         # редирект на главную страницу
-        return render_template('car_user.html', username=session['username'], title='Просмотр базы', cars=cars)
-    return render_template("search_dealer.html", title='Подбор по цене', form=form)
+        return render_template('magazine_user.html', username=session['username'], title='Просмотр базы', magazines=magazines)
+    return render_template("search_company.html", title='Подбор по цене', form=form)
 
 
-'''Работа с дилерским центром'''
+'''Работа с компанией'''
 
 
-@app.route('/dealer_admin', methods=['GET'])
-def dealer_admin():
+@app.route('/company_admin', methods=['GET'])
+def company_admin():
     """
-    Вывод всей информации об всех дилерских центрах
+    Вывод всей информации об всех компаниях
     :return:
     информация для авторизованного пользователя
     """
@@ -205,17 +206,17 @@ def dealer_admin():
         flash('Доступ запрещен')
         redirect('index')
     # иначе это админ
-    dealers = DealersModel(db.get_connection()).get_all()
-    return render_template('dealer_admin.html',
+    companies = CompaniesModel(db.get_connection()).get_all()
+    return render_template('company_admin.html',
                            username=session['username'],
-                           title='Просмотр Дилерских центров',
-                           dealers=dealers)
+                           title='Просмотр Компаний',
+                           companies=companies)
 
 
-@app.route('/dealer/<int:dealer_id>', methods=['GET'])
-def dealer(dealer_id):
+@app.route('/company/<int:company_id>', methods=['GET'])
+def company(company_id):
     """
-    Вывод всей информации о дилерском центре
+    Вывод всей информации о компании
     :return:
     информация для авторизованного пользователя
     """
@@ -226,31 +227,31 @@ def dealer(dealer_id):
     if session['username'] != 'admin':
         return redirect(url_for('index'))
     # иначе выдаем информацию
-    dealer = DealersModel(db.get_connection()).get(dealer_id)
-    return render_template('dealer_info.html',
+    company = CompaniesModel(db.get_connection()).get(company_id)
+    return render_template('company_info.html',
                            username=session['username'],
-                           title='Просмотр информации о дилерском центре',
-                           dealer=dealer)
+                           title='Просмотр информации о компании',
+                           company=company)
 
 
-@app.route('/add_dealer', methods=['GET', 'POST'])
-def add_dealer():
+@app.route('/add_company', methods=['GET', 'POST'])
+def add_company():
     """
-    Добавление дилерского центра и вывод на экран информации о нем
+    Добавление компании и вывод на экран информации о нем
     """
     # если пользователь не авторизован, кидаем его на страницу входа
     if 'username' not in session:
         return redirect('/login')
     # если админ, то его на свою страницу
     if session['username'] == 'admin':
-        form = AddDealerForm()
+        form = AddCompanyForm()
         if form.validate_on_submit():
-            # создать дилера
-            dealers = DealersModel(db.get_connection())
-            dealers.insert(name=form.name.data, address=form.address.data)
+            # создать компанию
+            companies = CompaniesModel(db.get_connection())
+            companies.insert(name=form.name.data, address=form.address.data)
             # редирект на главную страницу
             return redirect(url_for('index'))
-        return render_template("add_dealer.html", title='Добавление дилерского центра', form=form)
+        return render_template("add_company.html", title='Добавление компании', form=form)
 
 
 if __name__ == '__main__':

@@ -126,7 +126,7 @@ class MagazinesModel:
     def insert(self, name, price, length, theme, company):
         """Добавление журнала"""
         cursor = self.connection.cursor()
-        cursor.execute('''INSERT INTO cars 
+        cursor.execute('''INSERT INTO magazines 
                           (name, price, length, theme, company) 
                           VALUES (?,?,?,?,?)''',
                        (name, str(price), str(length), theme, str(company)))
@@ -169,7 +169,7 @@ class MagazinesModel:
         row = cursor.fetchall()
         return row
 
-    def get_by_dealer(self, company_id):
+    def get_by_company(self, company_id):
         """Запрос журналов по компании"""
         cursor = self.connection.cursor()
         cursor.execute("SELECT name, price, magazine_id FROM magazines WHERE company = ?", (str(company_id)))
