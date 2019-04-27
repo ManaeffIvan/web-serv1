@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+
+{% block content %}
+        <div class="jumbotron">
+          <h1 class="display-4">{{ magazine[1] }}</h1>
+          <p class="lead">Стоимость: {{ magazine[2] }}</p>
+          <hr class="my-4">
+          <p>Длина (л.с.): {{ magazine[3] }}</p>
+            <p>Жанр: {{ magazine[4] }}</p>
+            <p>Компания: {{ сompany }}</p>
+        </div>
+        <a href="/index"> <button type="button" class="btn btn-outline-info">Назад</button></a>
+{% endblock %}

@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <div class="jumbotron">
+      <h1 class="display-4">Информация о журналах</h1>
+      <p class="lead">На данной странице можно просматривать и редактировать журналы</p>
+      <hr class="my-4">
+      <p>Чтобы что-то сделать, тыкай на кнопки</p>
+        <a href="{{ url_for('add_magazine') }}">
+            <button type="button" class="btn btn-secondary">Добавить журнал</button>
+        </a>
+    </div>
+    {% for item in magazines %}
+        <div class="card" style="width: 18rem;">
+          <div class="card-body">
+            <h3 class="card-title">{{ item[0] }}</h3>
+            <p class="card-text">{{ item[1] }}</p>
+            <a href="/magazine/{{ item[2] }}" class="btn btn-primary">Подробнее</a>
+          </div>
+        </div>
+    {% endfor %}
+{% endblock %}
