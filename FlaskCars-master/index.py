@@ -133,7 +133,6 @@ def add_magazine():
         return redirect(url_for('magazine_admin'))
     return render_template("add_magazine.html", title='Добавление журнала', form=form)
 
-#---------------------------------------------------------------------------------------------------------------------
 
 @app.route('/magazine/<int:magazine_id>', methods=['GET'])
 def magazine(magazine_id):
@@ -146,17 +145,34 @@ def magazine(magazine_id):
     if 'username' not in session:
         return redirect('/login')
     # если не админ, то его на главную страницу
-    '''if session['username'] != 'admin':
-        return redirect(url_for('index'))'''
+    if session['username'] == 'admin':
+        return redirect(url_for('index'))
     # иначе выдаем информацию
     magazine = MagazinesModel(db.get_connection()).get(magazine_id)
     сompany = CompaniesModel(db.get_connection()).get(magazine[5])
-    print(сompany[1])
     return render_template('magazine_info.html',
                            username=session['username'],
                            title='Просмотр журнала',
                            magazine=magazine,
                            сompany=сompany[1])
+
+@app.route('/magazine_buy/<int:magazine_id>', methods=['GET', 'DELETE'])
+def magazine_buy(magazine_id):
+    """
+    Вывод всей информации о журнале
+    :return:
+    информация для авторизованного пользователя
+    """
+    # если пользователь не авторизован, кидаем его на страницу входа
+    if 'username' not in session:
+        return redirect('/login')
+    # если не админ, то его на главную страницу
+    if session['username'] == 'admin':
+        return redirect(url_for('index'))
+    # иначе выдаем информацию
+    magazines = MagazinesModel(db.get_connection())
+    magazines = magazines.delete(magazine_id)
+    return redirect(url_for('index'))
 
 
 @app.route('/search_price', methods=['GET', 'POST'])
